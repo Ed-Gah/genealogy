@@ -1,11 +1,15 @@
 "use client";
 import { Header, TextInput } from "@/components";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
+import {auth} from '../../utils/firebaseConfig';
 
 const HomePage = () => {
   const router = useRouter();
+
   const [search, setSearch] = useState<string>("");
+
+
   const gotoAddMember = () => {
     router.push("/add-new-member");
   };

@@ -6,11 +6,14 @@ import { useRouter } from "next/navigation";
 import { toaster } from "@/utils/toaster";
 import { AuthType, ButtonType } from "@/enums/enums";
 import { Button, TextInput } from "@/components";
-import { log } from "console";
+import {
+  auth,
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+} from "../../utils/firebaseConfig";
 
 export default function SignUp() {
   /** State management */
-  const [name, setName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [password, setPassword] = useState<string>("");
   const [confirmpassword, setconfirmPassword] = useState<string>("");
@@ -52,48 +55,50 @@ export default function SignUp() {
       }
     }
     try {
-      //   await createUserWithEmailAndPassword(auth, email, password)
-      //     .then(async (userCredential) => {
-      //       const user = userCredential.user;
-      //       await updateProfile(user, { displayName: name });
-      //       /** Setting user object for request */
-      //       const userObject = {
-      //         user_name: name,
-      //         email,
-      //       };
-      //       user && addUser(userObject);
-      //     })
-      //     .catch((error) => {
-      //       toaster(`${error.message}`, "error");
-      //       setIsLoading(false);
-      //     });
+      await createUserWithEmailAndPassword(auth, email, password)
+        .then(async (userCredential) => {
+          const user = userCredential.user;
+          if (user) {
+            setAuthType(AuthType.signIn)
+          }
+          console.log("USER CREATED", user);
+        })
+        .catch((error) => {
+          toaster(`${error.message}`, "error");
+          setIsLoading(false);
+        });
     } catch (error: any) {
       toaster(`${error.message}`, "error");
       throw new Error(error.message);
     }
   };
 
-  /** Adding the user to the Application database */
-  const queryClient = new QueryClient();
-  const onSucess = (data: any) => {
-    setIsLoading(false);
-    // let error = handleErrorMessage(data);
-    // if (error?.msg) {
-    //   toaster(error.msg, "error");
-    // } else {
-    //   toaster("Account Created successfully", "success");
-    //   setName("");
-    //   setEmail("");
-    //   setPassword("");
-    router.replace("home");
-    // }
-    // setShow(false);
-    // queryClient.invalidateQueries(["materials"]);
-  };
-
-  const handleSignIn = () => {
-    router.replace("home");
-    console.log("Signing in...");
+  const handleSignIn = async () => {
+    if (email === "") {
+      toaster("Please Email can't be empty", "error");
+    } else if (password === "") {
+      toaster("Please Password can't be empty", "error");
+    }
+    try {
+      setIsLoading(true);
+      await signInWithEmailAndPassword(auth, email, password)
+        .then(async (userCredential) => {
+          const user = userCredential.user;
+          console.log("Signed in user", user);
+          if (user) {
+            router.replace("home");
+          }
+          setIsLoading(false);
+        })
+        .catch((error) => {
+          toaster(`${error.message}`, "error");
+          setIsLoading(false);
+        });
+    } catch (error: any) {
+      toaster(`${error.message}`, "error");
+      setIsLoading(false);
+      throw new Error(error.message);
+    }
   };
 
   //   const { mutate: addUser } = useAddUser(onSucess) as any;
@@ -121,9 +126,9 @@ export default function SignUp() {
       <div className="flex h-screen flex-col items-center justify-center">
         <div className="rounded-lg bg-slate-200 px-14 py-11">
           <div>
-            <h1 className="text-3xl font-semibold">Create Account</h1>
+            <h1 className="text-3xl font-semibold">{authType === AuthType.signUp ? 'Create  Account' : 'Sign In'}</h1>
             <p className="my-2 text-xs text-slate-600">
-              Fill in the necessary information fields to to create your account
+              {authType === AuthType.signUp ?'Fill in the necessary fields to to create your account': 'Enter your email and password to sign in'}
             </p>
           </div>
           <div className="mt-6 [&>*]:mb-6">
@@ -189,7 +194,15 @@ export default function SignUp() {
 
             <div>
               <Button
-                btnText={authType === AuthType.signUp ? "Sign Up" : "Sign In"}
+                btnText={
+                  authType === AuthType.signUp
+                    ? isLoading
+                      ? "Creating account..."
+                      : "Sign Up"
+                    : isLoading
+                    ? "Signing in ..."
+                    : "Sign In"
+                }
                 type={ButtonType.primary}
                 onClick={() =>
                   authType === AuthType.signUp ? handleSignUp() : handleSignIn()
