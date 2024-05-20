@@ -34,16 +34,14 @@ export default function TextInput({
 }: Props) {
   return (
     <div className='relative'>
-      <h2 className='relative mb-1 ml-2 max-w-max font-semibold font'>
+      <h2 className='relative max-w-max font-semibold font'>
         {required && (
           <span className='absolute -right-3 -top-1 block text-red-500'>*</span>
         )}
-        <span>{label}</span>
+        <span className=" text-xs text-slate-600">{label}</span>
       </h2>
       <div
-        className={`relative flex w-full rounded-sm  ${
-          showIcon ? "pl-2" : "px-2 py-2"
-        }`}
+        className={`relative flex w-full rounded-sm py-1`}
       >
         <input
           value={inputValue}
@@ -62,6 +60,8 @@ export default function TextInput({
           onFocus={onFocus}
           type={type}
           onBlur={onBlur}
+          max={type === "date" ? new Date(Date.now()).toISOString() : ""}
+          
         />
         {showIcon && (
           <div className=' absolute right-2 text-sm text-slate-500'>
