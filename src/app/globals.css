@@ -1,33 +1,140 @@
+/* Mulish fonts */
+@import url("https://fonts.cdnfonts.com/css/roboto");
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* CSS root variables */
 :root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
+  /* MEDIA */
+  --small-device: 1024px;
+  --medium-device: 1280px;
+  --large-device: 1728px;
+
+  /* Colors Guiddance */
+  /* Primary */
+  --primary-800: #1a1a11;
+  --primary-700: #231f20;
+  --primary-500: #7c7c7c;
+  --primary-300: #;
+  --primary-100: #;
+
+  /* Secondary */
+  --secondary-800: #808080;
+  --secondary-700: #4b535f;
+  --secondary-500: #d1d1d1;
+  --secondary-300: #e6e6e6;
+  --secondary-100: #f5f5f5;
+  --secondary-50: #f0f1f3;
+
+  /* Error */
+  --error-50: #dc362e;
+
+  /* Neutral */
+  --neutral-0: #111827;
+  --neutral-1: #000000;
+  --neutral-10: #ffffff;
+
+  /* RADIUS */
+  --radius-small: 8px;
+  --radius-normal: 24px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 0, 0, 0;
-    --background-end-rgb: 0, 0, 0;
+/* Scroll bar styles */
+/* width */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+/* Track */
+::-webkit-scrollbar-track {
+  background: var(--neutral-10);
+}
+
+/* Handle */
+::-webkit-scrollbar-thumb {
+  background: var(--secondary-800);
+  border-radius: 5px;
+}
+
+/* Handle on hover */
+::-webkit-scrollbar-thumb:hover {
+  background: var(--secondary-800);
+}
+
+/* Base utilities */
+@layer base {
+  body {
+    font-family: Roboto, system-ui, sans-serif;
   }
 }
+/* Utility classes */
+@layer components {
+  .btn-primary-active-fill {
+    @apply rounded-sm bg-[var(--primary-800)] px-4 py-2 text-center text-xs text-[var(--secondary-100)] transition-all duration-100 ease-linear active:scale-95 sm:px-6 sm:text-sm;
+  }
 
-body {
-  color: rgb(var(--foreground-rgb));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-}
+  .btn-primary-active {
+    @apply rounded-sm border-2 border-[var(--primary-800)] bg-[var(--primary-800)] px-4 py-2 text-center text-xs text-[var(--secondary-500)] transition-all duration-100 ease-linear hover:bg-[var(--primary-800)] hover:text-[var(--secondary-100)] active:scale-95 sm:px-6 sm:text-sm;
+  }
 
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
+  .btn-secondary-active-fill {
+    @apply rounded-sm bg-[var(--secondary-800)] px-4 py-2 text-center text-xs text-[var(--secondary-100)] transition-all duration-100 ease-linear active:scale-95 sm:px-6 sm:text-sm;
+  }
+
+  .btn-secondary-active {
+    @apply rounded-sm border-2 border-[var(--secondary-800)] px-4 py-2 text-center text-xs text-[var(--primary-800)] transition-all duration-100 ease-linear hover:bg-[var(--secondary-800)] hover:text-[var(--secondary-100)] active:scale-95 sm:px-6 sm:text-sm;
+  }
+  .btn-primary-disabled {
+    @apply cursor-not-allowed rounded-sm border-2 border-[var(--secondary-800)] bg-[var(--secondary-800)] px-4 py-2 text-center text-xs text-[var(--secondary-100)] transition-all duration-100 ease-linear active:scale-95 sm:px-6 sm:text-sm;
+  }
+
+  .text-color {
+    @apply text-[var(--primary-800)];
+  }
+  .add-plus-btn {
+    @apply sm-text flex cursor-pointer items-center justify-center rounded-sm bg-[var(--primary-500)] px-5 py-2 text-[var(--secondary-100)] transition-all duration-100 ease-linear hover:bg-[var(--secondary-800)] active:scale-95;
+  }
+  .xs-text {
+    @apply text-xs font-normal;
+  }
+  .sm-text {
+    @apply text-sm;
+  }
+  .md-text {
+    @apply text-base font-medium;
+  }
+  .review-box {
+    @apply mr-4 mt-1 flex h-6 cursor-pointer items-center justify-center rounded-sm border-[0.5px] border-[var(--secondary-500)] px-2;
+  }
+  .animated {
+    @apply transition-all duration-100 ease-linear active:scale-95;
+  }
+
+  .icon {
+    @apply flex h-8 w-8 cursor-pointer items-center justify-center rounded-sm bg-[var(--secondary-100)];
+  }
+
+  /* Side bar */
+  .side-bar-active-box {
+    @apply flex cursor-pointer items-center justify-start rounded bg-[var(--secondary-800)] px-6 py-4;
+  }
+  .side-bar-hover {
+    @apply flex cursor-pointer items-center justify-start rounded bg-[var(--primary-800)] px-6 py-4;
+  }
+
+  /* General utility */
+  .error-input {
+    @apply flex-1 rounded-[1px] border-none transition-all duration-200 placeholder:text-sm placeholder:font-light focus:outline-none focus:ring-1 focus:ring-[var(--error-50)] focus:ring-offset-[0.7rem];
+  }
+  .error-text {
+    @apply truncate pl-1 text-[12px] text-[var(--error-50)];
+  }
+
+  /* tab view */
+  .active-tab {
+    @apply border-b-2 border-[var(--primary-800)] text-lg font-semibold;
   }
 }
