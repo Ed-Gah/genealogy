@@ -3,9 +3,7 @@
 import { useEffect, useState } from "react";
 import {
   useParams,
-  usePathname,
   useRouter,
-  useSearchParams,
 } from "next/navigation";
 import { toaster } from "@/utils/toaster";
 import { ButtonType, SexType } from "@/enums/enums";
@@ -25,8 +23,17 @@ import {
 const AddNewMember = () => {
   const router = useRouter();
   const { id } = useParams();
+  const { data, isLoading, isSuccess } = useGetAllFamilyMembers();
+  const {
+    data: fmember,
+    isLoading: memberLoading,
+    isSuccess: memberSuccess,
+  } = useGetFamilyMember(id as string);
+
   /** State management */
   const [member, setMember] = useState<any>();
+  const [mother, setMother] = useState<any>();
+  const [father, setFather] = useState<any>();
   const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
@@ -39,13 +46,21 @@ const AddNewMember = () => {
     useState<boolean>(false);
   const [mothers, setMothers] = useState<any[]>([]);
   const [fathers, setFathers] = useState<any[]>([]);
+  const [parentIds, setParentIds] = useState<string[]>([]);
   const [motherId, setMotherId] = useState<string>("");
   const [fatherId, setFatherId] = useState<string>("");
 
   const [sex, setSex] = useState<string>("");
 
+  const { data: parent1, isSuccess: parent1Success } = useGetFamilyMember(
+    parentIds[0]
+  );
+  const { data: parent2, isSuccess: parent2Success } = useGetFamilyMember(
+    parentIds[1]
+  );
+
   const onSuccess = (data: any) => {
-    console.log('DATA', data);
+    console.log("DATA", data);
     if (data?.data != null) {
       setFirstName("");
       setEmail("");
@@ -57,7 +72,10 @@ const AddNewMember = () => {
 
       router.replace("home");
 
-      toaster(` Successfully ${id ? "updated" : "created"} a family member`, "success");
+      toaster(
+        ` Successfully ${id ? "updated" : "created"} a family member`,
+        "success"
+      );
     } else {
       if (data.response.data.message.includes("jwt must be provided")) {
         toaster("You don't have permission to access this route", "error");
@@ -69,12 +87,32 @@ const AddNewMember = () => {
   const { mutate: addMember, isPending } = useAddFamilyMember(onSuccess);
   const { mutate: update, isPending: updatePending } =
     useUpdateFamilyMember(onSuccess);
-  const { data, isLoading, isSuccess } = useGetAllFamilyMembers();
-  const {
-    data: fmember,
-    isLoading: memberLoading,
-    isSuccess: memberSuccess,
-  } = useGetFamilyMember(id as string);
+
+  useEffect(() => {
+    if (parent1Success && parent2Success) {
+      console.log("DATA sdasdasdfasdf: ", data);
+      if (data?.data != null) {
+        if (parent1?.data?.data?.sex === "Male") {
+          setFather(parent1?.data?.data);
+        } 
+        if (parent1?.data?.data?.sex === "Female"){
+          setMother(parent1?.data?.data);
+        }
+        if (parent2?.data?.data?.sex === "Female") {
+          setMother(parent2?.data?.data);
+        } 
+        if((parent1?.data?.data?.sex === "Male")) {
+          setFather(parent2?.data?.data);
+        }
+      } else {
+        if (data?.response?.data?.message?.includes("jwt must be provided")) {
+          toaster("You don't have permission to access this route", "error");
+        } else {
+          toaster("Something went wrong try again later", "error");
+        }
+      }
+    }
+  }, [parent1Success, parent2Success, data, parent1, parent2]);
 
   useEffect(() => {
     if (isSuccess) {
@@ -99,8 +137,8 @@ const AddNewMember = () => {
     }
   }, [isSuccess, data]);
 
-  console.log("Mothers: ", motherId);
-  console.log("Fathers: ", fatherId);
+  console.log("Father", father);
+  console.log("Mother", mother);
 
   useEffect(() => {
     if (memberSuccess) {
@@ -114,6 +152,7 @@ const AddNewMember = () => {
         setPhoneNumber(fmember?.data?.data?.phoneNumber);
         setPlaceOfResidence(fmember?.data?.data?.placeOfResidence);
         setDate(fmember?.data?.data?.dateOfBirth);
+        setParentIds(fmember?.data?.data?.parents);
       } else {
         if (
           fmember?.response?.data?.message?.includes("jwt must be provided")
@@ -125,7 +164,6 @@ const AddNewMember = () => {
       }
     }
   }, [memberSuccess, fmember]);
-  console.log("MEMBERS: ", member);
 
   const handleSex = (gender: string) => {
     gender === "Female" ? setSex("Female") : setSex("Male");
@@ -142,57 +180,6 @@ const AddNewMember = () => {
       sex: sex,
     };
     addMember(newMember);
-    // Firebase intergration
-    // try {
-    //   setIsLoading(true);
-    //   const members = await getAllDocs("members");
-    //   for (let i of members.docs) {
-    //     if (i.data()?.email === email) {
-    //       setIsLoading(false);
-    //       toaster(`Member with email: ${email} already exists`, "error");
-    //     } else {
-    //       //    Check if mother and father exists.
-    //       if (i.data().parents) {
-    //         for (let j of i.data().parents) {
-    //           if (j.motherId === motherEmail || j.fatherId === fatherEmail) {
-    //             await createDoc("members", newMember);
-    //             setIsLoading(false);
-    //             toaster(
-    //               `Member with email: ${email} created successfully`,
-    //               "success"
-    //             );
-    //           } else {
-    //             if (j.motherId !== motherEmail) {
-    //               toaster(
-    //                 `A mother with this email: ${motherEmail} is not in your family tries.`,
-    //                 "error"
-    //               );
-    //             }
-    //             if (j.fatherId !== fatherEmail) {
-    //               toaster(
-    //                 `A mother with this email: ${fatherEmail} is not in your family tries.`,
-    //                 "error"
-    //               );
-    //             }
-    //           }
-    //         }
-    //       } else {
-    //         await createDoc("members", newMember);
-    //         setIsLoading(false);
-    //         toaster(
-    //           `Member with email: ${email} created successfully`,
-    //           "success"
-    //         );
-    //       }
-    //     }
-    //   }
-
-    //   console.log("Documents: ", JSON.stringify(members.docs[0].id));
-    // } catch (err: any) {
-    //   setIsLoading(false);
-    //   toaster("Error creating memeber", "error");
-    //   console.log("Error creating memeber", err);
-    // }
   };
 
   const updateMember = async () => {
@@ -217,15 +204,35 @@ const AddNewMember = () => {
 
   const saveButtonActive =
     (firstName?.length > 3 &&
-      email.length > 8 &&
-      phoneNumber.length > 8 &&
-      placeOfResidence.length > 3) ||
+      email?.length > 8 &&
+      phoneNumber?.length > 8 &&
+      placeOfResidence?.length > 3) ||
     id.length > 0;
   return (
     <>
       <Header />
       <div className="relative">
         <div className="flex h-screen flex-col items-center justify-center">
+          <div className="flex mb-2">
+            {father && (
+              <div className="flex items-center">
+                <p className="text-lg text-slate-600">Father: </p>
+                <p className="text-md text-slate-600 ml-2">
+                  {father?.firstName + " " + father?.lastName}
+                </p>
+              </div>
+            )}
+            <div className="ml-5">
+              {mother && (
+                <div className="flex items-center">
+                  <p className="text-lg text-slate-600">Mother : </p>
+                  <p className="text-md text-slate-600 ml-2">
+                    {mother?.firstName + " " + mother?.lastName}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
           <div className="rounded-lg bg-slate-200 px-4 py-2 xs:w-[70%] sm: w-[50%] md:w-[40%] lg:w-[30%] xl:w-[25%]">
             <div>
               <p className="my-2 text-xl text-slate-600">Add member </p>
@@ -360,7 +367,13 @@ const AddNewMember = () => {
                 />
                 <div className="ml-5">
                   <Button
-                    btnText={isPending ? "Creating memeber.." : updatePending ? "Updating..." : "Save"}
+                    btnText={
+                      isPending
+                        ? "Creating memeber.."
+                        : updatePending
+                        ? "Updating..."
+                        : "Save"
+                    }
                     type={ButtonType.primary}
                     onClick={() => {
                       id ? updateMember() : handleSubmit();
