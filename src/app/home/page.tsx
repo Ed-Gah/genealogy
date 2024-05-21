@@ -1,11 +1,12 @@
 "use client";
-import { Button, Header, TextInput } from "@/components";
+import { Header, TextInput } from "@/components";
 import React, { useEffect, useState } from "react";
-import { auth } from "../../utils/firebaseConfig";
-import { useGetAllFamilyMembers } from "@/queries/hooks/family/familyMember";
+import {
+  useGetAllFamilyMembers,
+  useGetFamilyMember,
+} from "@/queries/hooks/family/familyMember";
 import { toaster } from "@/utils/toaster";
-import { ButtonType } from "@/enums/enums";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 const displayFmailyMembers = [
   "Name",
@@ -17,9 +18,9 @@ const displayFmailyMembers = [
 ];
 
 const HomePage = () => {
+  const { data, isLoading, isSuccess } = useGetAllFamilyMembers();
   const router = useRouter();
   const [search, setSearch] = useState<string>("");
-  const { data, isLoading, isSuccess } = useGetAllFamilyMembers();
   const [active, setActive] = useState<number | null>();
   const [familyMembers, setFamilyMembers] = useState<any[]>([]);
   const [isHovering, setIsHovered] = useState(false);
@@ -38,7 +39,8 @@ const HomePage = () => {
       } else {
         if (data?.response?.data?.message?.includes("jwt must be provided")) {
           toaster("You don't have permission to access this route", "error");
-        } else {
+        }
+         else {
           toaster("Something went wrong try again later", "error");
         }
       }
@@ -75,15 +77,17 @@ const HomePage = () => {
                   <div>
                     <div className=" flex justify-between">
                       {displayFmailyMembers.map((item: string, i: number) => (
-                        <div key={i} className="w-[17%]">
-                          <h5
-                            className={
-                              "text-xs font-semibold text-slate-600 px-6"
-                            }
-                          >
-                            {item}
-                          </h5>
-                        </div>
+                        <>
+                          <div key={i} className="w-[17%]">
+                            <h5
+                              className={
+                                "text-xs font-semibold text-slate-600 px-6"
+                              }
+                            >
+                              {item}
+                            </h5>
+                          </div>
+                        </>
                       ))}
                     </div>
                     {familyMembers?.map((item, i: number) => (
