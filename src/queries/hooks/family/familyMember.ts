@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 // import { headers } from "next/headers";
 import { getToken } from "@/utils/getToken";
 
-interface UpdateFamilyMember {
+export interface UpdateFamilyMember {
     member: FamilyMember;
     id: string;
 }
@@ -15,7 +15,7 @@ const headers =  {'authorization': `Bearer ${authToken}`};
 const addFamilyMember = (member: FamilyMember) => {
   return request({ url: "", method: "post", data: member, headers});
 };
-const updateFamilyMember = (member: UpdateFamilyMember) => request({ url: `${member.id}`, method: "post", data: member.member })
+const updateFamilyMember = (member: UpdateFamilyMember) => request({ url: `${member.id}`, method: "post", data: member.member, headers })
 
 export const useAddFamilyMember = (onSuccess: any) => {
   return useMutation({mutationFn: addFamilyMember,  onSuccess });
