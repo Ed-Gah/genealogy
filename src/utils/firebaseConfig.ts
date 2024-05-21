@@ -11,7 +11,6 @@ import {
   getDocs,
   getDoc,
   doc,
-  DocumentReference,
 } from "@firebase/firestore";
 
 const firebaseConfig = {
@@ -40,5 +39,4 @@ export {
   getDoc,
   getDocs,
   doc,
-  DocumentReference,
 };

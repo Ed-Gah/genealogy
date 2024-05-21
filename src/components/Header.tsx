@@ -1,24 +1,28 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
-import { auth } from "@/utils/firebaseConfig";
+import { getToken, getUserEmail } from "@/utils/getToken";
+// import { auth } from "@/utils/firebaseConfig";
 
-interface Props {
-  email?: string;
-}
-
-export default function HeaderClient({ email }: Props) {
-  const currentUser = auth?.currentUser;
+export default function HeaderClient() {
+  const email = getUserEmail();
+  const authToken = getToken();
+  console.log("Email: " + email);
 
   /** Router for navigation */
   const router = useRouter();
+  const path = usePathname();
 
   /** Show menu */
-  const [activeTap, setActiveTap] = useState<string>("Home");
-  console.log("Active tap: " + activeTap);
-
+  const handleTap = (e: any, item: any) => {
+    if (authToken) {
+      e.preventDefault();
+      router.replace(item.href);
+    } else {
+      router.replace("/sign-up");
+    }
+  };
   return (
     <header className="fixed left-0 top-0 z-50 w-full bg-[var(--secondary-100)] py-2.5 sm:px-2 md:px-4 lg:px-10 xl:px-20 2xl:px-52 ">
       <div className="mx-auto flex w-[90%] items-center justify-between">
@@ -34,13 +38,11 @@ export default function HeaderClient({ email }: Props) {
           </div>
           {/* Welcome message */}
 
-          {currentUser?.email && (
+          {email && (
             <div>
               <p className=" font-normal">
                 Welcome!{" "}
-                <span className="text-[var(--secondary-800)]">
-                  {currentUser?.email}
-                </span>
+                <span className="text-[var(--secondary-800)]">{email}</span>
               </p>
             </div>
           )}
@@ -58,15 +60,15 @@ export default function HeaderClient({ email }: Props) {
               <li
                 key={i}
                 className={`${
-                  activeTap === item.name &&
-                  "bg-[var(--secondary-700)] px-2 pb-1 rounded-sm"
+                  path === item.href &&
+                  " border-b-4  border-[var(--primary-700)] px-2 pb-1 rounded-sm"
                 }`}
-                onClick={(e) => {
-                  e.preventDefault();
-                  setActiveTap(item.name);
-                }}
               >
-                <Link href={item.href} className="text-[var(--secondary-800)]">
+                <Link
+                  onClick={(e) => handleTap(e, item)}
+                  href={item.href}
+                  className="text-[var(--secondary-800)]"
+                >
                   {item.name}
                 </Link>
               </li>

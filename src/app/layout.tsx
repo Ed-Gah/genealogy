@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { ToastContainer } from "react-toastify";
-import 'react-toastify/dist/ReactToastify.css';
-
+import "react-toastify/dist/ReactToastify.css";
+import QueryProvider from "@/queries/provider/queryProvider";
 
 export const metadata: Metadata = {
   title: "Genealogy",
@@ -16,8 +16,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={''}>
-        {children}
+      <body className={""}>
+        <QueryProvider>{children}</QueryProvider>
         <ToastContainer />
       </body>
     </html>
