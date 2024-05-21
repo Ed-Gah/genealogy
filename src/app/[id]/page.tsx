@@ -15,28 +15,37 @@ import { Button, Header, TextInput } from "@/components";
 // import { auth } from "@/utils/firebaseConfig";
 import { FamilyMember, MemberType } from "@/types/types";
 import {
+  UpdateFamilyMember,
   useAddFamilyMember,
   useGetAllFamilyMembers,
   useGetFamilyMember,
+  useUpdateFamilyMember,
 } from "@/queries/hooks/family/familyMember";
 
 const AddNewMember = () => {
   const router = useRouter();
   const { id } = useParams();
   /** State management */
-  const [firstName, setFirstName] = useState<string>("Edwin");
+  const [member, setMember] = useState<any>();
+  const [firstName, setFirstName] = useState<string>("");
   const [lastName, setLastName] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [date, setDate] = useState<string>("");
   const [phoneNumber, setPhoneNumber] = useState<string>("");
   const [placeOfResidence, setPlaceOfResidence] = useState<string>("");
-  const [member, setMember] = useState<any>();
-  const [familyMembers, setFamilyMembers] = useState<any[]>()
-
+  const [showAsignMotherModal, setShowAsignMotherModal] =
+    useState<boolean>(false);
+  const [showAsignFatherModal, setShowAsignFatherModal] =
+    useState<boolean>(false);
+  const [mothers, setMothers] = useState<any[]>([]);
+  const [fathers, setFathers] = useState<any[]>([]);
+  const [motherId, setMotherId] = useState<string>("");
+  const [fatherId, setFatherId] = useState<string>("");
 
   const [sex, setSex] = useState<string>("");
 
   const onSuccess = (data: any) => {
+    console.log('DATA', data);
     if (data?.data != null) {
       setFirstName("");
       setEmail("");
@@ -48,7 +57,7 @@ const AddNewMember = () => {
 
       router.replace("home");
 
-      toaster(" Successfully created a family member", "success");
+      toaster(` Successfully ${id ? "updated" : "created"} a family member`, "success");
     } else {
       if (data.response.data.message.includes("jwt must be provided")) {
         toaster("You don't have permission to access this route", "error");
@@ -58,15 +67,28 @@ const AddNewMember = () => {
     }
   };
   const { mutate: addMember, isPending } = useAddFamilyMember(onSuccess);
+  const { mutate: update, isPending: updatePending } =
+    useUpdateFamilyMember(onSuccess);
   const { data, isLoading, isSuccess } = useGetAllFamilyMembers();
-  const { data: fmember, isLoading: memberLoading, isSuccess: memberSuccess } = useGetFamilyMember(id as string);
-
+  const {
+    data: fmember,
+    isLoading: memberLoading,
+    isSuccess: memberSuccess,
+  } = useGetFamilyMember(id as string);
 
   useEffect(() => {
-    if (memberSuccess) {
+    if (isSuccess) {
       console.log("DATA sdasdasdfasdf: ", data);
       if (data?.data != null) {
-        setFamilyMembers(data?.data?.data);
+        // setFamilyMembers(data?.data?.data);
+        const fathers = data?.data?.data?.filter(
+          (item: any) => item?.sex === "Male"
+        );
+        const mothers = data?.data?.data?.filter(
+          (item: any) => item?.sex === "Female"
+        );
+        setFathers(fathers);
+        setMothers(mothers);
       } else {
         if (data?.response?.data?.message?.includes("jwt must be provided")) {
           toaster("You don't have permission to access this route", "error");
@@ -75,7 +97,10 @@ const AddNewMember = () => {
         }
       }
     }
-  }, [memberSuccess, data]);
+  }, [isSuccess, data]);
+
+  console.log("Mothers: ", motherId);
+  console.log("Fathers: ", fatherId);
 
   useEffect(() => {
     if (memberSuccess) {
@@ -83,8 +108,16 @@ const AddNewMember = () => {
       if (fmember?.data != null) {
         setMember(fmember?.data?.data);
         setSex(fmember?.data?.data?.sex);
+        setFirstName(fmember?.data?.data?.firstName);
+        setEmail(fmember?.data?.data?.email);
+        setLastName(fmember?.data?.data?.lastName);
+        setPhoneNumber(fmember?.data?.data?.phoneNumber);
+        setPlaceOfResidence(fmember?.data?.data?.placeOfResidence);
+        setDate(fmember?.data?.data?.dateOfBirth);
       } else {
-        if (fmember?.response?.data?.message?.includes("jwt must be provided")) {
+        if (
+          fmember?.response?.data?.message?.includes("jwt must be provided")
+        ) {
           toaster("You don't have permission to access this route", "error");
         } else {
           toaster("Something went wrong try again later", "error");
@@ -105,11 +138,10 @@ const AddNewMember = () => {
       dateOfBirth: date,
       phoneNumber,
       placeOfResidence,
-      parents: [],
+      parents: [fatherId, motherId],
       sex: sex,
     };
     addMember(newMember);
-    console.log("NEW Member", JSON.stringify(newMember));
     // Firebase intergration
     // try {
     //   setIsLoading(true);
@@ -161,16 +193,34 @@ const AddNewMember = () => {
     //   toaster("Error creating memeber", "error");
     //   console.log("Error creating memeber", err);
     // }
-    console.log("New Member: " + JSON.stringify(newMember));
+  };
+
+  const updateMember = async () => {
+    const newMember: FamilyMember = {
+      firstName,
+      lastName,
+      email,
+      dateOfBirth: date,
+      phoneNumber,
+      placeOfResidence,
+      parents: [fatherId, motherId],
+      sex: sex,
+    };
+    const updateMemberData: UpdateFamilyMember = {
+      member: newMember,
+      id: id as string,
+    };
+    if (id) {
+      update(updateMemberData);
+    }
   };
 
   const saveButtonActive =
-    firstName?.length > 3 &&
-    email.length > 8 &&
-    phoneNumber.length > 8 &&
-    placeOfResidence.length > 3 &&
-    date.toString().length > 6;
-  console.log("SEXXX", sex);
+    (firstName?.length > 3 &&
+      email.length > 8 &&
+      phoneNumber.length > 8 &&
+      placeOfResidence.length > 3) ||
+    id.length > 0;
   return (
     <>
       <Header />
@@ -276,11 +326,28 @@ const AddNewMember = () => {
                     </div>
                   </div>
                 </div>
-                  {id && member?.parents.length < 2 && (
-                    <div className="flex justify-end mb-4">
-                      <p className="text-xs text-green-800 underline hover:cursor-pointer ">Asign parent</p>
-                    </div>
-                  )}
+                {id && member?.parents.length < 2 && (
+                  <div className="flex justify-end mb-4">
+                    <p
+                      className="text-xs text-green-800 underline hover:cursor-pointer "
+                      onClick={() => {
+                        setShowAsignMotherModal(true);
+                        setShowAsignFatherModal(false);
+                      }}
+                    >
+                      Asign mother
+                    </p>
+                    <p
+                      className="text-xs text-green-800 underline hover:cursor-pointer ml-2 "
+                      onClick={() => {
+                        setShowAsignMotherModal(false);
+                        setShowAsignFatherModal(true);
+                      }}
+                    >
+                      Asign father
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
             <div className="mt-1">
@@ -293,9 +360,11 @@ const AddNewMember = () => {
                 />
                 <div className="ml-5">
                   <Button
-                    btnText={isPending ? "Creating memeber.." : "Save"}
+                    btnText={isPending ? "Creating memeber.." : updatePending ? "Updating..." : "Save"}
                     type={ButtonType.primary}
-                    onClick={() => handleSubmit()}
+                    onClick={() => {
+                      id ? updateMember() : handleSubmit();
+                    }}
                     isActive={saveButtonActive || !!isPending}
                   />
                 </div>
@@ -304,6 +373,40 @@ const AddNewMember = () => {
           </div>
         </div>
       </div>
+      {showAsignMotherModal && (
+        <div className="absolute right-[40%] bottom-[20%] bg-slate-600 rounded-md">
+          {mothers.map((item: any, i) => (
+            <div
+              key={i}
+              onClick={() => {
+                setMotherId(item?.id);
+                setShowAsignMotherModal(false);
+              }}
+            >
+              <p className="text-xs text-slate-300 py-1 px-2 hover:cursor-pointer">
+                {item?.firstName + " " + item?.lastName}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+      {showAsignFatherModal && (
+        <div className="absolute right-[40%] bottom-[20%] bg-slate-600 rounded-md">
+          {fathers.map((item: any, i) => (
+            <div
+              key={i}
+              onClick={() => {
+                setFatherId(item?.id);
+                setShowAsignFatherModal(false);
+              }}
+            >
+              <p className="text-xs text-slate-300 py-1 px-2 hover:cursor-pointer">
+                {item?.firstName + " " + item?.lastName}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
 };
