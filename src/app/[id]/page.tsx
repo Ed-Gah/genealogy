@@ -107,16 +107,16 @@ const AddNewMember = () => {
       } else {
         if (data?.response?.data?.message?.includes("jwt must be provided")) {
           toaster("You don't have permission to access this route", "error");
-        } else {
-          toaster("Something went wrong try again later", "error");
         }
+        //  else {
+        //   toaster("Something went wrong try again later", "error");
+        // }
       }
     }
   }, [parent1Success, parent2Success, data, parent1, parent2]);
 
   useEffect(() => {
     if (isSuccess) {
-      console.log("DATA sdasdasdfasdf: ", data);
       if (data?.data != null) {
         // setFamilyMembers(data?.data?.data);
         const fathers = data?.data?.data?.filter(
@@ -130,19 +130,17 @@ const AddNewMember = () => {
       } else {
         if (data?.response?.data?.message?.includes("jwt must be provided")) {
           toaster("You don't have permission to access this route", "error");
-        } else {
-          toaster("Something went wrong try again later", "error");
-        }
+        } 
+        // else {
+        //   toaster("Something went wrong try again later", "error");
+        // }
       }
     }
   }, [isSuccess, data]);
 
-  console.log("Father", father);
-  console.log("Mother", mother);
 
   useEffect(() => {
     if (memberSuccess) {
-      console.log("Single data: ", fmember);
       if (fmember?.data != null) {
         setMember(fmember?.data?.data);
         setSex(fmember?.data?.data?.sex);
@@ -158,9 +156,10 @@ const AddNewMember = () => {
           fmember?.response?.data?.message?.includes("jwt must be provided")
         ) {
           toaster("You don't have permission to access this route", "error");
-        } else {
-          toaster("Something went wrong try again later", "error");
-        }
+        } 
+        // else {
+        //   toaster("Something went wrong try again later", "error");
+        // }
       }
     }
   }, [memberSuccess, fmember]);
