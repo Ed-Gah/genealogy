@@ -188,7 +188,7 @@ export default function SignUp() {
   };
   return (
     <div className="relative">
-      <div className="flex h-screen flex-col items-center justify-center">
+      <div className="flex flex-col items-center justify-center">
         <div className="rounded-lg bg-slate-200 px-4 py-2 w-[50%]">
           <h3 className="text-lg text-slate-600 font-medium mb-2">
             Genealogy App, your family history tool that makes it easy for you
