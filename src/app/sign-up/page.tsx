@@ -6,11 +6,17 @@ import { useRouter } from "next/navigation";
 import { toaster } from "@/utils/toaster";
 import { AuthType, ButtonType } from "@/enums/enums";
 import { Button, TextInput } from "@/components";
+// import {
+//   auth,
+//   createUserWithEmailAndPassword,
+//   signInWithEmailAndPassword,
+// } from "../../utils/firebaseConfig";
 import {
-  auth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-} from "../../utils/firebaseConfig";
+  useSignIn,
+  useSignUp,
+} from "@/queries/hooks/auth/authHook";
+import { User } from "@/types/types";
+import { LocalStorage } from "@/utils/storage";
 
 export default function SignUp() {
   /** State management */
@@ -19,8 +25,37 @@ export default function SignUp() {
   const [confirmpassword, setconfirmPassword] = useState<string>("");
   const [viewPassword, setViewPassword] = useState<boolean>(false);
   const [inputType, setInputType] = useState<string>("password");
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [authType, setAuthType] = useState<AuthType>(AuthType.signUp);
+  const [authType, setAuthType] = useState<AuthType>(AuthType.signIn);
+
+  const onSignUpSuccess = (data: any) => {
+    console.log("DATA", data?.data);
+    if (data.data != null) {
+      setAuthType(AuthType.signIn);
+      toaster("Your account has been created successfully", "success");
+      setconfirmPassword("");
+    } else {
+      toaster("Something went wrong please try again", "error");
+    }
+  };
+  const onSignInSuccess = (data: any) => {
+    console.log("DATA", data?.data);
+    if (data.data != null) {
+      setPassword("");
+      setEmail("");
+      LocalStorage.set("@authToken", data?.data?.token);
+      LocalStorage.set("@userEmail", data?.data?.data?.user?.email);
+      console.log('User email', data?.data?.data?.user?.email)
+      LocalStorage.set("@userId", data?.data?.data?.user?.id);
+      router.replace("home");
+      setAuthType(AuthType.signIn);
+      toaster(" Successfully signed in", "success");
+    } else {
+      toaster("Something went wrong please try again", "error");
+    }
+  };
+  const { mutate: signUp, isPending, isSuccess } = useSignUp(onSignUpSuccess);
+  const { mutate: signIn, isPending: signInPending } =
+    useSignIn(onSignInSuccess);
 
   /** Handle View Password function */
   const handleViewPassword = () => {
@@ -32,15 +67,10 @@ export default function SignUp() {
   const router = useRouter();
 
   const handleSignUp = async () => {
-    console.log("Signup");
-    if (email === "") {
-      toaster("Please Email can't be empty", "error");
-    } else if (password === "") {
-      toaster("Please Password can't be empty", "error");
-    } else if (password !== "") {
+    if (password !== "") {
       if (!testPasswordRequirements(password, "length")) {
         toaster(
-          "Please Password length must be at least 6 characters",
+          "Please Password length must be at least 8 characters",
           "error"
         );
       } else if (!testPasswordRequirements(password, "number")) {
@@ -51,26 +81,45 @@ export default function SignUp() {
           "error"
         );
       } else {
-        setIsLoading(true);
+        // setisPending || signInPending(true);
       }
     }
-    try {
-      await createUserWithEmailAndPassword(auth, email, password)
-        .then(async (userCredential) => {
-          const user = userCredential.user;
-          if (user) {
-            setAuthType(AuthType.signIn)
-          }
-          console.log("USER CREATED", user);
-        })
-        .catch((error) => {
-          toaster(`${error.message}`, "error");
-          setIsLoading(false);
-        });
-    } catch (error: any) {
-      toaster(`${error.message}`, "error");
-      throw new Error(error.message);
+    if (email === "") {
+      toaster("Please Email can't be empty", "error");
+    } else if (password === "") {
+      toaster("Please Password can't be empty", "error");
+    } else if (password != confirmpassword) {
+      toaster("Password and Confirm passwatch didn't match", "error");
+      console.log("Password and Confirm");
+    } else {
+      const user: User = {
+        email,
+        password,
+        passwordConfirm: confirmpassword,
+      };
+      console.log("USER: ", JSON.stringify(user));
+      signUp(user);
     }
+    // Sign up with firebase
+    //   try {
+    //     await createUserWithEmailAndPassword(auth, email, password)
+    //       .then(async (userCredential) => {
+    //         const user = userCredential.user;
+    //         if (user) {
+    //           setAuthType(AuthType.signIn);
+    //         }
+    //       })
+    //       .catch((error) => {
+    //         toaster(`${error.message}`, "error");
+    //         setisPending || signInPending(false);
+    //       });
+    //   } catch (error: any) {
+    //     setisPending || signInPending(false);
+    //     toaster(`${error.message}`, "error");
+    //     throw new Error(error.message);
+    //   }
+
+    // Sign up with Node backend
   };
 
   const handleSignIn = async () => {
@@ -78,27 +127,43 @@ export default function SignUp() {
       toaster("Please Email can't be empty", "error");
     } else if (password === "") {
       toaster("Please Password can't be empty", "error");
+    }else{
+      const user: User = {
+        email,
+        password,
+      };
+      console.log("USER: ", JSON.stringify(user));
+      signIn(user);
     }
-    try {
-      setIsLoading(true);
-      await signInWithEmailAndPassword(auth, email, password)
-        .then(async (userCredential) => {
-          const user = userCredential.user;
-          console.log("Signed in user", user);
-          if (user) {
-            router.replace("home");
-          }
-          setIsLoading(false);
-        })
-        .catch((error) => {
-          toaster(`${error.message}`, "error");
-          setIsLoading(false);
-        });
-    } catch (error: any) {
-      toaster(`${error.message}`, "error");
-      setIsLoading(false);
-      throw new Error(error.message);
-    }
+    // try {
+      //   setisPending || signInPending(true);
+    //   await signInWithEmailAndPassword(auth, email, password)
+    //     .then(async (userCredential) => {
+    //       const user = userCredential.user;
+    //       if (user) {
+    //         router.replace("home");
+    //       }
+    //       //   setisPending || signInPending(false);
+    //     })
+    //     .catch((error) => {
+    //       if (error.message.includes("not-found")) {
+    //         toaster(
+    //           `Sorry! the email:${email} doesn't exist in our system.`,
+    //           "error"
+    //         );
+    //       } else if (error.message.includes("wrong-password")) {
+    //         toaster(`Check you password and try again`, "error");
+    //       } else {
+    //         toaster(`${error.message}`, "error");
+    //       }
+    //       console.log("Error:", error);
+    //       //   setisPending || signInPending(false);
+    //     });
+    // } catch (error: any) {
+    //   toaster(`${error.message}`, "error");
+    //   //   setisPending || signInPending(false);
+    //   throw new Error(error.message);
+    // }
   };
 
   //   const { mutate: addUser } = useAddUser(onSucess) as any;
@@ -107,7 +172,7 @@ export default function SignUp() {
   function testPasswordRequirements(input: string, testCase: string) {
     switch (testCase) {
       case "length":
-        return input.length > 5;
+        return input.length > 7;
       case "number":
         return /\d/.test(input);
       case "uppercaseLowercase":
@@ -124,20 +189,29 @@ export default function SignUp() {
   return (
     <div className="relative">
       <div className="flex h-screen flex-col items-center justify-center">
-        <div className="rounded-lg bg-slate-200 px-14 py-11">
+        <div className="rounded-lg bg-slate-200 px-4 py-2 w-[50%]">
+          <h3 className="text-lg text-slate-600 font-medium mb-2">
+            Genealogy App, your family history tool that makes it easy for you
+            to discover and save important details about your{" "}
+            <span className="text-[var(--primary-700)]">Family Tree.</span>
+          </h3>
           <div>
-            <h1 className="text-3xl font-semibold">{authType === AuthType.signUp ? 'Create  Account' : 'Sign In'}</h1>
+            <h4 className="text-md text-[var(--primary-700)]">
+              {authType === AuthType.signUp ? "Create  Account" : "Sign In"}
+            </h4>
             <p className="my-2 text-xs text-slate-600">
-              {authType === AuthType.signUp ?'Fill in the necessary fields to to create your account': 'Enter your email and password to sign in'}
+              {authType === AuthType.signUp
+                ? "Fill in the necessary fields to to create your account"
+                : "Enter your email and password to sign in"}
             </p>
           </div>
-          <div className="mt-6 [&>*]:mb-6">
+          <div className="mt-2 [&>*]:mb-2">
             <TextInput
               label={"Email address"}
               setInputValue={setEmail}
               placeholderText={"Enter your email address"}
               type="email"
-              disable={isLoading}
+              disable={isPending || signInPending}
             />
 
             <TextInput
@@ -145,16 +219,16 @@ export default function SignUp() {
               setInputValue={setPassword}
               placeholderText={"Password"}
               type={inputType}
-              disable={isLoading}
+              disable={isPending || signInPending}
               showIcon
             />
             {authType == AuthType.signUp && (
               <TextInput
                 label={"Confirm password"}
-                setInputValue={setPassword}
+                setInputValue={setconfirmPassword}
                 placeholderText={"Password"}
                 type={inputType}
-                disable={isLoading}
+                disable={isPending || signInPending}
                 showIcon
               />
             )}
@@ -168,7 +242,7 @@ export default function SignUp() {
                       "text-green-500"
                     }`}
                   >
-                    6 characters minimum
+                    8 characters minimum
                   </li>
                   <li
                     className={`${
@@ -196,10 +270,10 @@ export default function SignUp() {
               <Button
                 btnText={
                   authType === AuthType.signUp
-                    ? isLoading
+                    ? isPending || signInPending
                       ? "Creating account..."
                       : "Sign Up"
-                    : isLoading
+                    : isPending || signInPending
                     ? "Signing in ..."
                     : "Sign In"
                 }
@@ -208,11 +282,7 @@ export default function SignUp() {
                   authType === AuthType.signUp ? handleSignUp() : handleSignIn()
                 }
                 isActive={
-                  !(
-                    email.length != 0 &&
-                    password.length != 0 &&
-                    confirmpassword.length != 0
-                  )
+                  (email.length > 8 && password.length > 7) ||( !isPending || !signInPending)
                 }
               />
 

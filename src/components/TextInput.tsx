@@ -3,6 +3,7 @@ import React, { ReactNode } from "react";
 
 interface Props {
   inputValue?: string;
+  defaultValue?: string;
   setInputValue?: any;
   placeholderText: string;
   label?: string;
@@ -29,6 +30,7 @@ export default function TextInput({
   isValid = true,
   errorText,
   onBlur,
+  defaultValue,
   type = "text",
   onFocus,
 }: Props) {
@@ -61,7 +63,7 @@ export default function TextInput({
           type={type}
           onBlur={onBlur}
           max={type === "date" ? new Date(Date.now()).toISOString() : ""}
-          
+          defaultValue={defaultValue}
         />
         {showIcon && (
           <div className=' absolute right-2 text-sm text-slate-500'>
