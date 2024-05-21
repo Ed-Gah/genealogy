@@ -38,11 +38,13 @@ const FamilyTree = () => {
     <div className="mt-20">
       <Header />
       <div className="flex flex-col items-center justify-center">
-        <div className="rounded-lg bg-slate-200 px-4 py-2">
+        <div className="w-[68%]">
           <TextInput
             setInputValue={setSearch}
             placeholderText="Type your name to search your family tree"
           />
+        </div>
+        <div className="rounded-lg bg-slate-200 px-4 py-2">
           {search ? (
             <div>
               <p>{search}</p>
